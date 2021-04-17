@@ -4,7 +4,7 @@
 #
 # Hint: python -m pip install pillow (install PIL on Windows)
 #
-# last updated by Decca / RiFT on 10.04.2021 00:45
+# last updated by Decca / RiFT on 17.04.2021 23:20
 #
 
 # import modules
@@ -25,6 +25,7 @@ class ArgumentParser(argparse.ArgumentParser):
               "\n"
               "optional arguments:\n"
               "  -o, --output       outputfile for tile/sprite values (e.g.: .lua)\n"
+              "  -l, --language     output as: js, fennel, wren, moon or squirrel, default is lua\n"
               "  -f, --force        force overwrite of outputfile when it already exist\n"
               "  -s, --sprites      export as sprites (FG) instead of tiles (BG)\n"
               "  -p, --page         start page (1-3) for tiles/sprites, default is 0\n"
@@ -34,6 +35,9 @@ class ArgumentParser(argparse.ArgumentParser):
               "\n"
               "The optional arguments are only needed if the default setting doesnt meet the\n"
               "required needs. A specific name for the outputfile can be set (-o/--output).\n"
+              "The output can be in different scripting languages (-l / --language). Lua is\n"
+              "default, but the following languages are also supported: JavaScript, Squirrel,\n"
+              "Fennel, Wren and Moonscript. Dont expect too much, is just different formatting.\n"
               "The data can be saved as sprites instead of tiles (-s / --sprites).\n"
               "Tiles/sprites can start on a different page (-p / --page) instead of 0.\n"
               "In the PRO version of TIC-80 there are up to 8 memory banks (-b / --bank)\n"
@@ -42,6 +46,7 @@ class ArgumentParser(argparse.ArgumentParser):
               "examples:\n"
               "  ticmctile imagefile.png \n"
               "  ticmctile graphic.gif -o myticprog.lua\n"
+              "  ticmctile pixels.bmp -l js -o javascript.js\n"
               "  ticmctile logo.png -o tempvalues.lua -f\n"
               "  ticmctile goblins.gif -o sprites.txt -s\n"
               "  ticmctile font.png -o lettering.lua -p 2\n"
@@ -56,15 +61,24 @@ parser.add_argument('image',
                     type=str,
                     help='imagefile with pixels')
 parser.add_argument('-o', '--output',
-                    metavar='output.lua',
+                    metavar='outputfile',
                     type=str,
                     action='store',
                     help='outputfile for sprite/tile values')
+parser.add_argument('-l', '--language',
+                    metavar='language',
+                    const='lua',
+                    default='lua',
+                    choices=('js', 'fennel', 'wren', 'moon', 'squirrel', 'lua'),
+                    type=str,
+                    nargs='?',
+                    action='store',
+                    help='language bla bla bla')
 parser.add_argument('-f', '--force',
                     action='store_true',
                     help='force overwrite of outputfile')
 parser.add_argument('-p', '--page',
-                    metavar='0',
+                    metavar='page',
                     const=0,
                     default=0,
                     choices=range(0, 4),
@@ -76,7 +90,7 @@ parser.add_argument('-s', '--sprites',
                     action='store_true',
                     help='export sprites instead of tiles')
 parser.add_argument('-b', '--bank',
-                    metavar='1',
+                    metavar='membank',
                     const=1,
                     choices=range(1, 8),
                     type=int,
@@ -85,13 +99,14 @@ parser.add_argument('-b', '--bank',
                     help='memory bank (1-7) for TIC-80 PRO version, default is 1')
 parser.add_argument('-v', '--version',
                     action='version',
-                    version='%(prog)s 1.0')
+                    version='%(prog)s 1.1')
 args = parser.parse_args()
 
 
 # get commandline arguments
 imageFile = args.image
 outputFile = args.output
+outputLang = args.language
 outputForce = args.force
 outputPage = args.page
 outputSprites = args.sprites
@@ -174,6 +189,7 @@ stepsX = 32 // digits
 adrOffset = outputPage * 4
 address = adrOffset
 digitString = "0" + str(digits) + "b"
+outputMsg = "...press ESC to continue!"
 
 
 # get a tile as 32 bytes of pixel data
@@ -219,9 +235,36 @@ if outputBank:
     print("  Memorybank: " + str(outputBank))
 
 
+# set language specialties
+if outputLang == "fennel":
+    outputExt = ".fnl"
+    outputCode = '(fn _G.TIC []\n (print (.. "' + outputMsg + '") 7 43)\n)'
+    outputCmnt = ";; "
+elif outputLang == "wren":
+    outputExt = ".wren"
+    outputCode = 'class Game is TIC {\n construct new() { TIC.print("' + outputMsg + '",7,43) }\n}'
+    outputCmnt = "// "
+elif outputLang == "squirrel":
+    outputExt = ".nut"
+    outputCode = 'function TIC() {\n print("' + outputMsg + '",7,43)\n}'
+    outputCmnt = "// "
+elif outputLang == "js":
+    outputExt = ".js"
+    outputCode = 'function TIC() {\n print("' + outputMsg + '",7,43)\n}'
+    outputCmnt = "// "
+elif outputLang == "moon":
+    outputExt = ".moon"
+    outputCode = 'export TIC=-> print("' + outputMsg + '",7,43)'
+    outputCmnt = "-- "
+else:
+    outputExt = ".lua"
+    outputCode = 'function TIC()\n print("' + outputMsg + '",7,43)\nend'
+    outputCmnt = "-- "
+
+
 # generate name for output file if not set
 if not isinstance(outputFile, str):
-    outputFile = os.path.splitext(imageFile)[0]+'.lua'
+    outputFile = os.path.splitext(imageFile)[0] + outputExt
 
 
 # check if output file already exist
@@ -239,15 +282,17 @@ print(" try to save: " + str(outputFile))
 check_file(outputFile)
 try:
     with open(outputFile, 'w') as file:
-        file.write("-- title:  " + str(imageFile) + "\n-- author: TicMcTile\n-- script: lua\n")  # write header
-        file.write("\nfunction TIC()\n print(\"...press ESC to continue!\",7,43)\nend\n\n")
-        file.write("-- <PALETTE>\n")
-        file.write("-- 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57\n")  # SWEETIE-16 palette
-        file.write("-- </PALETTE>\n\n")
-        file.write("-- <" + outputString + ">\n")
+        file.write(outputCmnt + "title:  " + str(imageFile) + "\n")  # write header
+        file.write(outputCmnt + "author: TicMcTile\n")
+        file.write(outputCmnt + "script: " + outputLang + "\n\n")
+        file.write(outputCode + "\n\n")
+        file.write(outputCmnt + "<PALETTE>\n")
+        file.write(outputCmnt + "000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57\n")  # SWEETIE-16 palette
+        file.write(outputCmnt + "</PALETTE>\n\n")
+        file.write(outputCmnt + "<" + outputString + ">\n")
         for tile in tiles:
-            file.write("-- " + format(tile, "03d") + ":" + tiles[tile] + "\n")  # write content
-        file.write("-- </" + outputString + ">\n")  # write footer
+            file.write(outputCmnt + format(tile, "03d") + ":" + tiles[tile] + "\n")  # write content
+        file.write(outputCmnt + "</" + outputString + ">\n")  # write footer
 except Exception as error:
     print("ERROR: " + str(error), file=sys.stderr)
     exit(1)
@@ -255,3 +300,7 @@ except Exception as error:
 
 # end message
 print(" done.")
+
+
+# end of code
+exit()

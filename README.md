@@ -11,7 +11,8 @@ Of course those images can be loaded into the [sprite editor](https://github.com
 
 But why do those steps manually, when you can just use a tool for that: **TicMcTile**
 
-TicMcTile reads your imagefile(s) in a varity of [formats](https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html) and creates .[lua](https://www.lua.org/)-file(s) from it, which can be run/loaded by the [TIC-80](https://tic80.com/) or your favourite [editor](https://en.wikipedia.org/wiki/Text_editor)/[ide](https://en.wikipedia.org/wiki/Integrated_development_environment).
+TicMcTile reads your imagefile(s) in a varity of [formats](https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html) and creates script-files from it, which can be run/loaded by the [TIC-80](https://tic80.com/) or your favourite [editor](https://en.wikipedia.org/wiki/Text_editor)/[ide](https://en.wikipedia.org/wiki/Integrated_development_environment).
+Supported languages are: [Lua](https://www.lua.org), [Moonscript](https://moonscript.org), [Javascript](https://developer.mozilla.org/en-US/docs/Web/JavaScript), [Wren](https://wren.io), [Fennel](https://fennel-lang.org) and [Squirrel](http://www.squirrel-lang.org).
 
 This tool can also stuff more tiles/sprites into your program, allowing you to import images as 4 or 2 color images instead of 16, thanks to a new [feature](https://github.com/nesbox/TIC-80/releases/tag/v0.80.1344) of the [TIC-80](https://tic80.com/).
 
@@ -70,7 +71,13 @@ Specify a different name for the output file:
 
     $ ticmctile.py singlepage-2colors.png -o twocolors.lua
 	
-	At the moment its only possible to generate .lua files, sorry.
+	The default language is Lua, but all other languages are supported
+
+Set a different scripting language for the output file:
+
+    $ ticmctile.py singlepage-2colors.png -l squirrel -o myownscript.nut
+	
+	Mind the correct file extension: .js, .fnl, .wren, .moon .nut or .lua
 
 Generate a sprite page (FG) instead of a tile page (BG):
 
@@ -104,6 +111,7 @@ Commandline options
 
     optional arguments:
        -o, --output       outputfile for tile/sprite values (e.g.: .lua)
+	   -l, --language     output as: js, fennel, wren, moon or squirrel, default is lua
        -f, --force        force overwrite of outputfile when it already exist
        -s, --sprites      export as sprites (FG) instead of tiles (BG)
        -p, --page         start page (1-3) for tiles/sprites, default is 0
@@ -113,6 +121,9 @@ Commandline options
      
     The optional arguments are only needed if the default setting doesnt meet the
     required needs. A specific name for the outputfile (-o/--output) can be set.
+    The output can be in different scripting languages (-l / --language). Lua is
+    default, but the following languages are also supported: JavaScript, Squirrel,
+    Fennel, Wren and Moonscript. Dont expect too much, is just different formatting.
     The data can be saved as sprites (-s / --sprites) instead of tiles.
     Tiles/sprites can start on a different page (-p / --page) instead of 0.
     In the PRO version of TIC-80 there are up to 8 memory banks (-b / --bank)
@@ -121,6 +132,7 @@ Commandline options
     examples:
        ticmctile imagefile.png
        ticmctile graphic.gif -o myticprog.lua
+	   ticmctile pixels.bmp -l js -o javascript.js           
        ticmctile logo.png -o tempvalues.lua -f
        ticmctile goblins.gif -o sprites.txt -s
        ticmctile font.png -o lettering.lua -p 2
@@ -130,18 +142,18 @@ Commandline options
 Files
 =====
 
-* ticmctile.py (the commandlinetool itself)
-* singlepage-2colors.png (example image with 2 colors, [original](https://demozoo.org/graphics/3719/) by Decca/Lego)
-* singlepage-4colors.png (example image with 4 colors, [original](https://demozoo.org/graphics/3719/) by Decca/Lego)
-* singlepage-16colors.png (example image with 16 colors, [original](https://demozoo.org/graphics/3719/) by Decca/Lego)
-* multipage-2colors.png (3 pages with 2 colors, [originals](https://demozoo.org/graphics/3719/) [both](https://demozoo.org/graphics/115000/) by Decca/Lego, font from [Chartist](https://github.com/PhilSwiss/chartist))
-* multipage-4colors.png (2 pages with 4 colors, [originals](https://demozoo.org/graphics/3719/) [both](https://demozoo.org/graphics/115000/) by Decca/Lego)
+* **ticmctile.py** (the commandlinetool itself)
+* **singlepage-2colors.png** (example image with 2 colors, [original](https://demozoo.org/graphics/3719/) by Decca/Lego)
+* **singlepage-4colors.png** (example image with 4 colors, [original](https://demozoo.org/graphics/3719/) by Decca/Lego)
+* **singlepage-16colors.png** (example image with 16 colors, [original](https://demozoo.org/graphics/3719/) by Decca/Lego)
+* **multipage-2colors.png** (3 pages with 2 colors, [originals](https://demozoo.org/graphics/3719/) [both](https://demozoo.org/graphics/115000/) by Decca/Lego, font from [Chartist](https://github.com/PhilSwiss/chartist))
+* **multipage-4colors.png** (2 pages with 4 colors, [originals](https://demozoo.org/graphics/3719/) [both](https://demozoo.org/graphics/115000/) by Decca/Lego)
 
 
 Future ideas
 ============
 
-* Output of other languages than Lua, e.g. JavaScript
+* Output of other languages than Lua, e.g. JavaScript - **Done**, implemented in version [1.1](https://github.com/PhilSwiss/ticmctile/tree/version1.1)
 * keeping the color-palette of the image, instead of using the default palette
 * Real compression of the values incl. a small decompressor for [Lua](https://www.lua.org/) 
 
