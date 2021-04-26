@@ -30,12 +30,12 @@ And 2 colors will result in **four pages** of the same size for each type. You c
 See this [animation](https://user-images.githubusercontent.com/1101448/92115601-5b25ce80-edfb-11ea-8153-3abc187153ac.gif) for a better explaination/usage of the [sprite editor](https://user-images.githubusercontent.com/1101448/92114828-2a916500-edfa-11ea-9905-0650335f5860.png).
 
 But there is currently no easy way to use these extended capabilities with images made outside the [TIC-80](https://tic80.com/). The *import*-[command](https://github.com/nesbox/TIC-80/wiki/Console#available-commands) used with the [sprite editor](https://user-images.githubusercontent.com/1101448/92114828-2a916500-edfa-11ea-9905-0650335f5860.png) will always fall back to **one** page (128 x 128 pixels) with 16 colors each.
-But **TicMcTile** comes to the rescue. It will convert your images (no matter if 16, 4 or 2 colors) into a .lua-file with the correct _encoding_ of the data. This file can then directly be used by the [TIC-80](https://tic80.com/) and its [sprite editor](https://user-images.githubusercontent.com/1101448/92114358-5d872900-edf9-11ea-8252-35b9c5c27083.png).
+But **TicMcTile** comes to the rescue. It will convert your images (no matter if 16, 4 or 2 colors) into a script-file with the correct _encoding_ of the data. This file can then directly be used by the [TIC-80](https://tic80.com/) and its [sprite editor](https://user-images.githubusercontent.com/1101448/92114358-5d872900-edf9-11ea-8252-35b9c5c27083.png).
 
-You can convert a **singlepage**-image (128x128 or smaller) and assign it to one of the avaliable pages, or you can use **multipage**-images. When using 4 colors, a **multipage** can be
-**max. 256 pixels** wide & 128 pixels high. In case of 2 colors, a **multipage** can be **max. 512 pixels** wide & 128 pixels high. You can select whether the image(s) should be converted to tiles (default) or sprites.
+You can convert a **singlepage**-image (128x128 or smaller) and assign it to one of the avaliable pages, or you can use **multipage**-images. When using **4** colors, a **multipage** can be
+**max. 256 pixels** wide & 128 pixels high. In case of **2** colors, a **multipage** can be **max. 512 pixels** wide & 128 pixels high. You can select whether the image(s) should be converted to tiles (default) or sprites.
 
-Only images with **16 colors or less** are supported, for obvious reasons. These images should consist of [indexed colors](https://en.wikipedia.org/wiki/Indexed_color) or have a [color-palette](https://en.wikipedia.org/wiki/Palette_(computing)). Truecolor-images will be converted, but results may vary. Also make sure, that images match the [color-palette](https://github.com/nesbox/TIC-80/wiki/palette) [(SWEETIE-16)](https://lospec.com/palette-list/sweetie-16) of the **TIC-80**. Custom palettes are not yet supported.
+Only images with **16 colors or less** are supported, for obvious reasons. These images should consist of [indexed colors](https://en.wikipedia.org/wiki/Indexed_color) or have a [color-palette](https://en.wikipedia.org/wiki/Palette_(computing)). Truecolor-images will be converted, but results may vary. Make sure, that images match the [color-palette](https://github.com/nesbox/TIC-80/wiki/palette) [(SWEETIE-16)](https://lospec.com/palette-list/sweetie-16) of the **TIC-80**. Or tell **TicMcTile** to keep the colors of your image by replacing the default ones.
 
 
 Requirements
@@ -97,7 +97,13 @@ Save the tiles or sprites to a different memory bank, there is only 1 by default
 
     In the PRO Version of TIC-80 there are 8 memory banks instead of only 1.
 
+Keep the colors of the image file instead of using the default ones:
 
+    $ ticmctile.py ownpalette-16colors.png -o mynicepalette.lua -k
+
+    16 colors will replace the whole palette, 4 or 2 colors will only replace the first palette entries.
+    
+    
 Commandline options
 ===================
 
@@ -116,6 +122,7 @@ Commandline options
        -s, --sprites      export as sprites (FG) instead of tiles (BG)
        -p, --page         start page (1-3) for tiles/sprites, default is 0
        -b, --bank         memory bank (1-7) for TIC-80 PRO version, default is 1
+       -k, --keep         keep colors of imagefile to adjust the TIC-80 palette
        -v, --version      show version info
        -h, --help         show this help
      
@@ -127,7 +134,8 @@ Commandline options
     The data can be saved as sprites (-s / --sprites) instead of tiles.
     Tiles/sprites can start on a different page (-p / --page) instead of 0.
     In the PRO version of TIC-80 there are up to 8 memory banks (-b / --bank)
-    to store the tiles/sprites, instead of only one.
+    to store the tiles/sprites, instead of only one. The colors of the image can
+    be kept (-k / --keep), replacing the default colors (Sweetie-16) of the TIC-80.
 
     examples:
        ticmctile imagefile.png
@@ -137,6 +145,7 @@ Commandline options
        ticmctile goblins.gif -o sprites.txt -s
        ticmctile font.png -o lettering.lua -p 2
        ticmctile tilesgalore.gif -o membank3.lua -b 3
+       ticmctile nicecolors.png -o mypalette.lua -k
 
 
 Files
@@ -148,13 +157,14 @@ Files
 * **singlepage-16colors.png** (example image with 16 colors, [original](https://demozoo.org/graphics/3719/) by Decca/Lego)
 * **multipage-2colors.png** (3 pages with 2 colors, [originals](https://demozoo.org/graphics/3719/) [both](https://demozoo.org/graphics/115000/) by Decca/Lego, font from [Chartist](https://github.com/PhilSwiss/chartist))
 * **multipage-4colors.png** (2 pages with 4 colors, [originals](https://demozoo.org/graphics/3719/) [both](https://demozoo.org/graphics/115000/) by Decca/Lego)
+* **ownpalette-16colors.png** (example image with an own palette, [original](https://demozoo.org/graphics/3719/) by Decca/Lego)
 
 
 Future ideas
 ============
 
 * Output of other languages than Lua, e.g. JavaScript - **Done**, implemented in version [1.1](https://github.com/PhilSwiss/ticmctile/tree/version1.1)
-* keeping the color-palette of the image, instead of using the default palette
+* keeping the color-palette of the image, instead of using the default palette - **Done**, implemented in version [1.2](https://github.com/PhilSwiss/ticmctile/tree/version1.2)
 * Real compression of the values incl. a small decompressor for [Lua](https://www.lua.org/) 
 
 

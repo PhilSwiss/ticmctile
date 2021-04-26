@@ -4,7 +4,7 @@
 #
 # Hint: python -m pip install pillow (install PIL on Windows)
 #
-# last updated by Decca / RiFT on 17.04.2021 23:20
+# last updated by Decca / RiFT on 26.04.2021 14:00
 #
 
 # import modules
@@ -30,6 +30,7 @@ class ArgumentParser(argparse.ArgumentParser):
               "  -s, --sprites      export as sprites (FG) instead of tiles (BG)\n"
               "  -p, --page         start page (1-3) for tiles/sprites, default is 0\n"
               "  -b, --bank         memory bank (1-7) for TIC-80 PRO version, default is 1\n"
+              "  -k, --keep         keep colors of imagefile to adjust the TIC-80 palette\n"
               "  -v, --version      show version info\n"
               "  -h, --help         show this help\n"
               "\n"
@@ -41,7 +42,8 @@ class ArgumentParser(argparse.ArgumentParser):
               "The data can be saved as sprites instead of tiles (-s / --sprites).\n"
               "Tiles/sprites can start on a different page (-p / --page) instead of 0.\n"
               "In the PRO version of TIC-80 there are up to 8 memory banks (-b / --bank)\n"
-              "to store the tiles/sprites, instead of only one.\n"
+              "to store the tiles/sprites, instead of only one. The colors of the image can\n"
+              "be kept (-k / --keep), replacing the default colors (Sweetie-16) of the TIC-80.\n"
               "\n"
               "examples:\n"
               "  ticmctile imagefile.png \n"
@@ -50,7 +52,8 @@ class ArgumentParser(argparse.ArgumentParser):
               "  ticmctile logo.png -o tempvalues.lua -f\n"
               "  ticmctile goblins.gif -o sprites.txt -s\n"
               "  ticmctile font.png -o lettering.lua -p 2\n"
-              "  ticmctile tilesgalore.gif -o membank3.lua -b 3\n", file=sys.stderr)
+              "  ticmctile tilesgalore.gif -o membank3.lua -b 3\n"
+              "  ticmctile nicecolors.png -o mypalette.lua -k \n", file=sys.stderr)
         self.exit(1, '%s: ERROR: %s\n' % (self.prog, message))
 
 
@@ -97,9 +100,12 @@ parser.add_argument('-b', '--bank',
                     nargs='?',
                     action='store',
                     help='memory bank (1-7) for TIC-80 PRO version, default is 1')
+parser.add_argument('-k', '--keep',
+                    action='store_true',
+                    help='keep original image colors')
 parser.add_argument('-v', '--version',
                     action='version',
-                    version='%(prog)s 1.1')
+                    version='%(prog)s 1.2')
 args = parser.parse_args()
 
 
@@ -108,6 +114,7 @@ imageFile = args.image
 outputFile = args.output
 outputLang = args.language
 outputForce = args.force
+outputKeep = args.keep
 outputPage = args.page
 outputSprites = args.sprites
 outputBank = args.bank
@@ -173,6 +180,21 @@ else:
     if orgSizeX > maxSizeX:
         print("ERROR: image starting at page " + str(outputPage) + " cant be wider than " + str(maxSizeX) + " pixels")
         exit(1)
+
+
+# set palette for output file
+Palette = "1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57"  # SWEETIE-16 palette
+if not outputKeep:
+    outputPalette = "000:" + Palette
+else:
+    srcPalette = srcImg.getpalette()  # get original palette from image
+    rgbEntries = (2 ** digits) * 3
+    rgbPalette = srcPalette[:rgbEntries]
+    outputPalette = ""
+    for entry in rgbPalette:
+        hexVal = '%0*x' % (2, entry)
+        outputPalette = outputPalette + hexVal
+    outputPalette = "000:" + outputPalette + Palette[len(outputPalette):]  # fill up with default palette
 
 
 # set string for output file
@@ -287,7 +309,7 @@ try:
         file.write(outputCmnt + "script: " + outputLang + "\n\n")
         file.write(outputCode + "\n\n")
         file.write(outputCmnt + "<PALETTE>\n")
-        file.write(outputCmnt + "000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57\n")  # SWEETIE-16 palette
+        file.write(outputCmnt + outputPalette + "\n")  # write palette
         file.write(outputCmnt + "</PALETTE>\n\n")
         file.write(outputCmnt + "<" + outputString + ">\n")
         for tile in tiles:

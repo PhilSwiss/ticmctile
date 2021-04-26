@@ -1,6 +1,11 @@
 2021-04-10  Decca (Philipp)
 		* Version 1.0
 		* Initial release
+
 2021-04-17  Decca (Philipp)
 		* Version 1.1
 		* Choose any supported scripting language
+
+2021-04-26  Decca (Philipp)
+		* Version 1.2
+		* Keep colors of image instead of default palette
