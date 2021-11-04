@@ -181,16 +181,16 @@ Files
 =====
 
 * **ticmctile.py** (the commandlinetool itself)
-* **singlepage-2colors.png** (example image with 2 colors, [original](https://demozoo.org/graphics/3719/) by Decca/Lego)
-* **singlepage-4colors.png** (example image with 4 colors, [original](https://demozoo.org/graphics/3719/) by Decca/Lego)
-* **singlepage-16colors.png** (example image with 16 colors, [original](https://demozoo.org/graphics/3719/) by Decca/Lego)
-* **multipage-2colors.png** (3 pages with 2 colors, [originals](https://demozoo.org/graphics/3719/) [both](https://demozoo.org/graphics/115000/) by Decca/Lego, font from [Chartist](https://github.com/PhilSwiss/chartist))
-* **multipage-4colors.png** (2 pages with 4 colors, [originals](https://demozoo.org/graphics/3719/) [both](https://demozoo.org/graphics/115000/) by Decca/Lego)
-* **ownpalette-16colors.png** (example image with an own palette, [original](https://demozoo.org/graphics/3719/) by Decca/Lego)
-* **palette.lua/.js** (the palette-decoder when using raw- or rle-mode)
-* **decoder-raw.lua/.js** (the decoder when using raw-mode)
-* **decoder-rle.lua/.js** (the decoder when using rle-mode)
-* **viewer.lua/.js** (the viewer when using raw- or rle-mode)
+* **images/singlepage-2colors.png** (example image with 2 colors, [original](https://demozoo.org/graphics/3719/) by Decca/Lego)
+* **images/singlepage-4colors.png** (example image with 4 colors, [original](https://demozoo.org/graphics/3719/) by Decca/Lego)
+* **images/singlepage-16colors.png** (example image with 16 colors, [original](https://demozoo.org/graphics/3719/) by Decca/Lego)
+* **images/multipage-2colors.png** (3 pages with 2 colors, [originals](https://demozoo.org/graphics/3719/) [both](https://demozoo.org/graphics/115000/) by Decca/Lego, font from [Chartist](https://github.com/PhilSwiss/chartist))
+* **images/multipage-4colors.png** (2 pages with 4 colors, [originals](https://demozoo.org/graphics/3719/) [both](https://demozoo.org/graphics/115000/) by Decca/Lego)
+* **images/ownpalette-16colors.png** (example image with an own palette, [original](https://demozoo.org/graphics/3719/) by Decca/Lego)
+* **decoders/palette.lua/.js** (the palette-decoder when using raw- or rle-mode)
+* **decoders/decoder-raw.lua/.js** (the decoder when using raw-mode)
+* **decoders/decoder-rle.lua/.js** (the decoder when using rle-mode)
+* **viewers/viewer.lua/.js** (the viewer when using raw- or rle-mode)
 
 
 Future ideas
