@@ -9,3 +9,10 @@
 2021-04-26  Decca (Philipp)
 		* Version 1.2
 		* Keep colors of image instead of default palette
+
+2021-10-16  Decca (Philipp)
+		* Version 2.0
+		* Fixed some bugs regarding the page-feature
+		* Store data as inline-code instead of config-block
+		* Encode data as raw-bytes, rle-compressed or binary-file instead of config-block
+                * System to support decoders and viewers for multiple scripting languages

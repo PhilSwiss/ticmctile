@@ -4,7 +4,7 @@
 #
 # Hint: python -m pip install pillow (install PIL on Windows)
 #
-# last updated by Decca / RiFT on 26.04.2021 14:00
+# last updated by Decca / RiFT on 04.11.2021 19:30
 #
 
 # import modules
@@ -29,6 +29,7 @@ class ArgumentParser(argparse.ArgumentParser):
               "  -f, --force        force overwrite of outputfile when it already exist\n"
               "  -s, --sprites      export as sprites (FG) instead of tiles (BG)\n"
               "  -p, --page         start page (1-3) for tiles/sprites, default is 0\n"
+              "  -m, --mode         mode to encode as: raw, rle, binary, default is config\n"
               "  -b, --bank         memory bank (1-7) for TIC-80 PRO version, default is 1\n"
               "  -k, --keep         keep colors of imagefile to adjust the TIC-80 palette\n"
               "  -v, --version      show version info\n"
@@ -41,6 +42,8 @@ class ArgumentParser(argparse.ArgumentParser):
               "Fennel, Wren and Moonscript. Dont expect too much, is just different formatting.\n"
               "The data can be saved as sprites instead of tiles (-s / --sprites).\n"
               "Tiles/sprites can start on a different page (-p / --page) instead of 0.\n"
+              "Mode to encode (-m / --mode) the tiles/sprites as part of the code as raw, rle,\n"
+              "as a binary-file (binary) or as part of the config, which is the default.\n"
               "In the PRO version of TIC-80 there are up to 8 memory banks (-b / --bank)\n"
               "to store the tiles/sprites, instead of only one. The colors of the image can\n"
               "be kept (-k / --keep), replacing the default colors (Sweetie-16) of the TIC-80.\n"
@@ -52,6 +55,7 @@ class ArgumentParser(argparse.ArgumentParser):
               "  ticmctile logo.png -o tempvalues.lua -f\n"
               "  ticmctile goblins.gif -o sprites.txt -s\n"
               "  ticmctile font.png -o lettering.lua -p 2\n"
+              "  ticmctile flextiles.bmp -o thecodeinside.lua -m rle\n"
               "  ticmctile tilesgalore.gif -o membank3.lua -b 3\n"
               "  ticmctile nicecolors.png -o mypalette.lua -k \n", file=sys.stderr)
         self.exit(1, '%s: ERROR: %s\n' % (self.prog, message))
@@ -76,7 +80,7 @@ parser.add_argument('-l', '--language',
                     type=str,
                     nargs='?',
                     action='store',
-                    help='language bla bla bla')
+                    help='language for the outputfile')
 parser.add_argument('-f', '--force',
                     action='store_true',
                     help='force overwrite of outputfile')
@@ -92,6 +96,15 @@ parser.add_argument('-p', '--page',
 parser.add_argument('-s', '--sprites',
                     action='store_true',
                     help='export sprites instead of tiles')
+parser.add_argument('-m', '--mode',
+                    metavar='mode',
+                    const='config',
+                    default='config',
+                    choices=('raw', 'rle', 'binary', 'config'),
+                    type=str,
+                    nargs='?',
+                    action='store',
+                    help='store data in other formats then config')
 parser.add_argument('-b', '--bank',
                     metavar='membank',
                     const=1,
@@ -105,7 +118,7 @@ parser.add_argument('-k', '--keep',
                     help='keep original image colors')
 parser.add_argument('-v', '--version',
                     action='version',
-                    version='%(prog)s 1.2')
+                    version='%(prog)s 2.0')
 args = parser.parse_args()
 
 
@@ -113,6 +126,7 @@ args = parser.parse_args()
 imageFile = args.image
 outputFile = args.output
 outputLang = args.language
+outputEnc = args.mode
 outputForce = args.force
 outputKeep = args.keep
 outputPage = args.page
@@ -173,28 +187,28 @@ if orgSizeY > 128:
 if outputPage == 0:
     maxSizeX = 512 // digits
     if orgSizeX > maxSizeX:
-        print("ERROR: image cant be wider than " + str(maxSizeX) + " pixels")
+        print("ERROR: image with " + str(len(orgColors)) + " colors cant be wider than " + str(maxSizeX) + " pixels")
         exit(1)
 else:
     maxSizeX = (512 // digits) - (128 * outputPage)
     if orgSizeX > maxSizeX:
-        print("ERROR: image starting at page " + str(outputPage) + " cant be wider than " + str(maxSizeX) + " pixels")
+        print("ERROR: image with " + str(len(orgColors)) + " colors and " + str(orgSizeX) + " pixels width cant start at page " + str(outputPage))
         exit(1)
 
 
 # set palette for output file
-Palette = "1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57"  # SWEETIE-16 palette
+stdPalette = "1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57"  # SWEETIE-16 palette
 if not outputKeep:
-    outputPalette = "000:" + Palette
+    Palette = stdPalette
 else:
     srcPalette = srcImg.getpalette()  # get original palette from image
     rgbEntries = (2 ** digits) * 3
     rgbPalette = srcPalette[:rgbEntries]
-    outputPalette = ""
+    Palette = ""
     for entry in rgbPalette:
         hexVal = '%0*x' % (2, entry)
-        outputPalette = outputPalette + hexVal
-    outputPalette = "000:" + outputPalette + Palette[len(outputPalette):]  # fill up with default palette
+        Palette = Palette + hexVal
+    Palette = Palette + stdPalette[len(Palette):]  # fill up with default palette
 
 
 # set string for output file
@@ -208,7 +222,7 @@ else:
 offsetX = 0
 offsetY = 0
 stepsX = 32 // digits
-adrOffset = outputPage * 4
+adrOffset = (outputPage * 4) * digits
 address = adrOffset
 digitString = "0" + str(digits) + "b"
 outputMsg = "...press ESC to continue!"
@@ -247,6 +261,7 @@ while offsetY < orgSizeY:
         offsetX = offsetX + stepsX
     offsetY = offsetY + 8
     address = offsetY * 2 + adrOffset
+    rowValues = offsetX*(digits*2)
     offsetX = 0
 print("   generated: " + str(len(tiles)) + " " + outputString.lower())
 
@@ -262,62 +277,221 @@ if outputLang == "fennel":
     outputExt = ".fnl"
     outputCode = '(fn _G.TIC []\n (print (.. "' + outputMsg + '") 7 43)\n)'
     outputCmnt = ";; "
+    outputVar = "let "
 elif outputLang == "wren":
     outputExt = ".wren"
     outputCode = 'class Game is TIC {\n construct new() { TIC.print("' + outputMsg + '",7,43) }\n}'
     outputCmnt = "// "
+    outputVar = "var "
 elif outputLang == "squirrel":
     outputExt = ".nut"
     outputCode = 'function TIC() {\n print("' + outputMsg + '",7,43)\n}'
     outputCmnt = "// "
+    outputVar = "local "
 elif outputLang == "js":
     outputExt = ".js"
     outputCode = 'function TIC() {\n print("' + outputMsg + '",7,43)\n}'
     outputCmnt = "// "
+    outputVar = "var "
 elif outputLang == "moon":
     outputExt = ".moon"
     outputCode = 'export TIC=-> print("' + outputMsg + '",7,43)'
     outputCmnt = "-- "
+    outputVar = "local "
 else:
     outputExt = ".lua"
     outputCode = 'function TIC()\n print("' + outputMsg + '",7,43)\nend'
     outputCmnt = "-- "
+    outputVar = "local "
+
+
+# set file-extension for binary encoding
+if outputEnc == "binary":
+    outputExt = ".bin"
+
+
+# include decoders for the encoded data
+if outputEnc == "raw" or "rle":
+    decoderFile = os.path.join(os.path.curdir, "decoders", "decoder-" + outputEnc + outputExt)
+    if os.path.isfile(decoderFile):
+        with open(decoderFile, "r") as file:
+            fileLines = [line.strip('\n') for line in file.readlines()]
+            codeStart = next((index for index, tag in enumerate(fileLines) if tag == outputCmnt + 'CODEBLOCK'), -1)
+            outputDecoder = "\n".join(fileLines[codeStart+1:]) + "\n"
+    else:
+        outputDecoder = '\n' + outputCmnt + "No " + outputEnc + "-decoder for " + outputLang + " found!\n"
+
+    viewerFile = os.path.join(os.path.curdir, "viewers", "viewer" + outputExt)
+    if os.path.isfile(viewerFile):
+        with open(viewerFile, "r") as file:
+            fileLines = [line.strip('\n') for line in file.readlines()]
+            codeStart = next((index for index, tag in enumerate(fileLines) if tag == outputCmnt + 'CODEBLOCK'), -1)
+            outputViewer = "\n".join(fileLines[codeStart+1:]) + "\n"
+    else:
+        outputViewer = '\n' + outputCmnt + "No viewer for " + outputLang + " found!\n"
+
+    paletteFile = os.path.join(os.path.curdir, "decoders", "palette" + outputExt)
+    outputPalette = '\n' + outputVar + 'pal = "' + Palette + '"\n'
+    if os.path.isfile(paletteFile):
+        with open(paletteFile, "r") as file:
+            fileLines = [line.strip('\n') for line in file.readlines()]
+            codeStart = next((index for index, tag in enumerate(fileLines) if tag == outputCmnt + 'CODEBLOCK'), -1)
+            outputPalette = outputPalette + "\n".join(fileLines[codeStart+1:]) + "\n"
+    else:
+        outputPalette = outputPalette + '\n' + outputCmnt + "No palette-routine for " + outputLang + " found!\n"
 
 
 # generate name for output file if not set
 if not isinstance(outputFile, str):
-    outputFile = os.path.splitext(imageFile)[0] + outputExt
+    outputFile = os.path.splitext(imageFile)[0] + outputExt  # replace file-extension
+    outputFile = os.path.basename(outputFile)  # remove path if imagefile has one
 
 
 # check if output file already exist
-def check_file(outputName):
+def check_file(fileName):
     if not outputForce:
-        if os.path.isfile(outputName):
+        if os.path.isfile(fileName):
             print("ERROR: file already exist")
             exit(1)
     else:
         return
 
 
-# save data to output file
+# write data as BINARY output file
+def write_binary():
+    outputCode = ""
+    if not outputSprites:
+        outputCode = outputCode + "8"  # Offset for tiles
+    else:
+        outputCode = outputCode + "c"  # Offset for sprites
+    outputCode = outputCode + str(outputPage * digits)  # Offset for page
+    hexWidth = '%0*x' % (2, rowValues//8)  # Width aka Values per row
+    outputCode = outputCode + str(hexWidth)
+    for tile in tiles:
+        outputCode = outputCode + tiles[tile]  # write content
+    outputBytes = bytes.fromhex(outputCode)
+    try:
+        with open(outputFile, 'wb') as file:
+            file.write(outputBytes)  # write binary stream
+    except Exception as error:
+        print("ERROR: " + str(error), file=sys.stderr)
+        exit(1)
+    return
+
+
+# write data as CONFIG to output file
+def write_config():
+    try:
+        with open(outputFile, 'w') as file:
+            file.write(outputCmnt + "title:  " + str(imageFile) + "\n")  # write header
+            file.write(outputCmnt + "author: TicMcTile\n")
+            file.write(outputCmnt + "script: " + outputLang + "\n\n")
+            file.write(outputCode + "\n\n")
+            file.write(outputCmnt + "<PALETTE>\n")
+            file.write(outputCmnt + "000:" + Palette + "\n")  # write palette
+            file.write(outputCmnt + "</PALETTE>\n\n")
+            file.write(outputCmnt + "<" + outputString + ">\n")
+            for tile in tiles:
+                file.write(outputCmnt + format(tile, "03d") + ":" + tiles[tile] + "\n")  # write content
+            file.write(outputCmnt + "</" + outputString + ">\n")  # write footer
+    except Exception as error:
+        print("ERROR: " + str(error), file=sys.stderr)
+        exit(1)
+    return
+
+
+# write data as RAW (unencoded) to output file
+def write_raw():
+    outputCode = '\n' + outputVar + 'gfx = "'
+    if not outputSprites:
+        outputCode = outputCode + "8"  # Offset for tiles
+    else:
+        outputCode = outputCode + "c"  # Offset for sprites
+    outputCode = outputCode + str(outputPage * digits)  # Offset for page
+    hexWidth = '%0*x' % (2, rowValues//8)  # Width aka Values per row
+    outputCode = outputCode + str(hexWidth)
+    for tile in tiles:
+        outputCode = outputCode + tiles[tile]  # write content
+    outputCode = outputCode + '"\n'
+    try:
+        with open(outputFile, 'w') as file:
+            file.write(outputCmnt + "title:  " + str(imageFile) + "\n")  # write header
+            file.write(outputCmnt + "author: TicMcTile\n")
+            file.write(outputCmnt + "script: " + outputLang + "\n")
+            file.write(outputPalette)
+            file.write(outputCode)
+            file.write(outputDecoder)
+            file.write(outputViewer)
+    except Exception as error:
+        print("ERROR: " + str(error), file=sys.stderr)
+        exit(1)
+    return
+
+
+# write data as RLE-encoded to output file
+def write_rle():  # noqa C901
+    outputCode = '\n' + outputVar + 'gfx = "'
+    if not outputSprites:
+        outputCode = outputCode + "8"  # Offset for tiles
+    else:
+        outputCode = outputCode + "c"  # Offset for sprites
+    outputCode = outputCode + str(outputPage * digits)  # Offset for page
+    hexWidth = '%0*x' % (2, rowValues//8)  # Width aka Values per row
+    outputCode = outputCode + str(hexWidth)
+    # serialize tile values
+    dat = ""
+    for tile in tiles:
+        dat = dat + tiles[tile]  # write content
+    # rle encode (only append number if value repeats more than twice)
+    enc = ""
+    prev = ""
+    count = 1
+    for symbol in dat:
+        value = chr(int(symbol, 16)+65)
+        if value != prev:
+            if prev:
+                enc = enc + prev
+                if count == 2:
+                    enc = enc + prev
+                if count > 2:
+                    enc = enc + str(count-1)
+            count = 1
+            prev = value
+        else:
+            count = count + 1
+    enc = enc + prev
+    if count == 2:
+        enc = enc + prev
+    elif count > 2:
+        enc = enc + str(count-1)
+    outputCode = outputCode + enc + '"\n'
+    try:
+        with open(outputFile, 'w') as file:
+            file.write(outputCmnt + "title:  " + str(imageFile) + "\n")  # write header
+            file.write(outputCmnt + "author: TicMcTile\n")
+            file.write(outputCmnt + "script: " + outputLang + "\n")
+            file.write(outputPalette)
+            file.write(outputCode)
+            file.write(outputDecoder)
+            file.write(outputViewer)
+    except Exception as error:
+        print("ERROR: " + str(error), file=sys.stderr)
+        exit(1)
+    return
+
+
+# write the data with the choosen encoding
+print("    Encoding: " + str(outputEnc))
 print(" try to save: " + str(outputFile))
 check_file(outputFile)
-try:
-    with open(outputFile, 'w') as file:
-        file.write(outputCmnt + "title:  " + str(imageFile) + "\n")  # write header
-        file.write(outputCmnt + "author: TicMcTile\n")
-        file.write(outputCmnt + "script: " + outputLang + "\n\n")
-        file.write(outputCode + "\n\n")
-        file.write(outputCmnt + "<PALETTE>\n")
-        file.write(outputCmnt + outputPalette + "\n")  # write palette
-        file.write(outputCmnt + "</PALETTE>\n\n")
-        file.write(outputCmnt + "<" + outputString + ">\n")
-        for tile in tiles:
-            file.write(outputCmnt + format(tile, "03d") + ":" + tiles[tile] + "\n")  # write content
-        file.write(outputCmnt + "</" + outputString + ">\n")  # write footer
-except Exception as error:
-    print("ERROR: " + str(error), file=sys.stderr)
-    exit(1)
+if outputEnc == "binary":
+    write_binary()
+elif outputEnc == "raw":
+    write_raw()
+elif outputEnc == "rle":
+    write_rle()
+else:
+    write_config()
 
 
 # end message
