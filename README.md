@@ -79,7 +79,7 @@ Windows:
 Quickstart
 ==========
 
-**TicMcTile** is straightforward to use, and its really easy to convert an image to TIC-80.
+**TicMcTile** is straightforward to use and its really easy to convert an image to TIC-80.
 Just run `ticmctile` using the provided example images:
 
     $ ticmctile.py singlepage-16colors.png
@@ -152,14 +152,14 @@ Commandline options
        -v, --version      show version info
        -h, --help         show this help
      
-    The optional arguments are only needed if the default setting doesnt meet the
-    required needs. A specific name for the outputfile (-o/--output) can be set.
+    The optional arguments are only needed if the default setting does not meet the
+    required needs. A specific name for the output file (-o / --output) can be set.
     The output can be in different scripting languages (-l / --language). Lua is
     default, but the following languages are also supported: JavaScript, Squirrel,
     Fennel, Wren and Moonscript. Dont expect too much, is just different formatting.
     The data can be saved as sprites (-s / --sprites) instead of tiles.
     Tiles/sprites can start on a different page (-p / --page) instead of 0.
-	Mode to encode (-m / --mode) the tiles/sprites as part of the code as raw, rle,
+	Mode (-m / --mode) to encode the tiles/sprites as part of the code as raw, rle,
     as a binary-file (binary) or as part of the config, which is the default.
     In the PRO version of TIC-80 there are up to 8 memory banks (-b / --bank)
     to store the tiles/sprites, instead of only one. The colors of the image can

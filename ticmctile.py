@@ -4,7 +4,7 @@
 #
 # Hint: python -m pip install pillow (install PIL on Windows)
 #
-# last updated by Decca / RiFT on 04.11.2021 19:30
+# last updated by Decca / RiFT on 31.03.2022 01:00
 #
 
 # import modules
@@ -35,14 +35,14 @@ class ArgumentParser(argparse.ArgumentParser):
               "  -v, --version      show version info\n"
               "  -h, --help         show this help\n"
               "\n"
-              "The optional arguments are only needed if the default setting doesnt meet the\n"
-              "required needs. A specific name for the outputfile can be set (-o/--output).\n"
+              "The optional arguments are only needed if the default setting does not meet the\n"
+              "required needs. A specific name for the output file can be set (-o / --output).\n"
               "The output can be in different scripting languages (-l / --language). Lua is\n"
               "default, but the following languages are also supported: JavaScript, Squirrel,\n"
               "Fennel, Wren and Moonscript. Dont expect too much, is just different formatting.\n"
               "The data can be saved as sprites instead of tiles (-s / --sprites).\n"
               "Tiles/sprites can start on a different page (-p / --page) instead of 0.\n"
-              "Mode to encode (-m / --mode) the tiles/sprites as part of the code as raw, rle,\n"
+              "Mode (-m / --mode) to encode the tiles/sprites as part of the code as raw, rle,\n"
               "as a binary-file (binary) or as part of the config, which is the default.\n"
               "In the PRO version of TIC-80 there are up to 8 memory banks (-b / --bank)\n"
               "to store the tiles/sprites, instead of only one. The colors of the image can\n"
@@ -118,7 +118,7 @@ parser.add_argument('-k', '--keep',
                     help='keep original image colors')
 parser.add_argument('-v', '--version',
                     action='version',
-                    version='%(prog)s 2.0')
+                    version='%(prog)s 2.1')
 args = parser.parse_args()
 
 
@@ -357,6 +357,34 @@ def check_file(fileName):
         return
 
 
+# encode data with Run-Length Encoding (only append number if value repeats more than twice)
+def encode_rle(data):
+    enc = ""
+    prev = ""
+    count = 1
+    for symbol in data:
+        value = chr(int(symbol, 16)+65)
+        if value != prev:
+            if prev:
+                enc = enc + prev
+                if count == 2:
+                    enc = enc + prev
+                elif count > 2:
+                    enc = enc + str(count-1)
+            count = 1
+            prev = value
+        else:
+            count = count + 1
+    enc = enc + prev
+    if count == 2:
+        enc = enc + prev
+    elif count > 2:
+        enc = enc + str(count-1)
+    if not enc[-1].isdigit():
+        enc = enc + "0"
+    return enc
+
+
 # write data as BINARY output file
 def write_binary():
     outputCode = ""
@@ -439,32 +467,12 @@ def write_rle():  # noqa C901
     hexWidth = '%0*x' % (2, rowValues//8)  # Width aka Values per row
     outputCode = outputCode + str(hexWidth)
     # serialize tile values
-    dat = ""
+    rawData = ""
     for tile in tiles:
-        dat = dat + tiles[tile]  # write content
-    # rle encode (only append number if value repeats more than twice)
-    enc = ""
-    prev = ""
-    count = 1
-    for symbol in dat:
-        value = chr(int(symbol, 16)+65)
-        if value != prev:
-            if prev:
-                enc = enc + prev
-                if count == 2:
-                    enc = enc + prev
-                if count > 2:
-                    enc = enc + str(count-1)
-            count = 1
-            prev = value
-        else:
-            count = count + 1
-    enc = enc + prev
-    if count == 2:
-        enc = enc + prev
-    elif count > 2:
-        enc = enc + str(count-1)
-    outputCode = outputCode + enc + '"\n'
+        rawData = rawData + tiles[tile]  # join contents
+    # encode serialized values
+    encData = encode_rle(rawData)
+    outputCode = outputCode + encData + '"\n'
     try:
         with open(outputFile, 'w') as file:
             file.write(outputCmnt + "title:  " + str(imageFile) + "\n")  # write header

@@ -16,3 +16,7 @@
 		* Store data as inline-code instead of config-block
 		* Encode data as raw-bytes, rle-compressed or binary-file instead of config-block
                 * System to support decoders and viewers for multiple scripting languages
+
+2022-03-31  Decca (Philipp)
+		* Version 2.1
+		* Fixed some bugs regarding the rle-encoding
