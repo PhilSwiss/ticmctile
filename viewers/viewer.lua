@@ -1,6 +1,6 @@
--- title:  Viewer
--- author: Decca/Rift
--- desc:   view tiles/sprites from memory
+-- title:  Viewer incl. System Font Demo
+-- author: Decca/Rift & Josh Goebel
+-- desc:   view tiles/sprites/charsets from memory
 -- script: lua
 
 -- USAGE:
@@ -8,6 +8,7 @@
 -- CTRL - toggle Tiles/Sprites
 -- Up/Down - switch colormode
 -- Left/Right - switch pages
+-- TAB - display system font
 
 -- CODEBLOCK
 
@@ -29,17 +30,38 @@ function draw()
   end
   rect(184,2,56,132,00)
   rectb(54,2,132,132,10)
-  print(" Bg  Fg",4,8,15)
-  print(">   <",4+(t*20),8,15)
-  print("Page: "..(r//16),4,16,15)
-  print("Mode: "..m,4,24,15)
-  print("CTRL\n toggle\n Tiles or\n Sprites",4,40,15,false,1,true)
-  print("Up/Down\n switch\n color\n mode",4,70,15,false,1,true)
-  print("Left/Right\n switch\n pages",4,100,15,false,1,true)
+  print("Tiles",4-(t*32),4,15)
+  print("Sprites",-40+(t*44),4,15)
+  print("Page: "..(r//16),4,12,15)
+  print("Mode: "..m,4,20,15)
+  print("CTRL\n toggle\n Tiles or\n Sprites",4,32,10,false,1,true)
+  print("Up/Down\n switch\n color\n mode",4,62,10,false,1,true)
+  print("Left/Right\n switch\n pages",4,92,10,false,1,true)
+  print("TAB\n display\n system font",4,116,10,false,1,true)
 end
 
 -- call the viewer
 draw()
+
+-- system font demo - https://github.com/nesbox/TIC-80/wiki/system-font
+offy=4
+offx=65
+
+function font()
+  cls()
+  print("SYSTEM",0,5,12)
+  print("FONT",0,12,12)
+  print("CTRL\n back to\n Tiles or\n Sprites",0,24,10,false,1,true)
+  for x = 0,15 do
+    off = x*16
+    print(string.format("%+3s",off),offx-20,x*8+offy+1,14,true,1, true)
+    for y =0,15 do
+      char = y*16+x
+      rect(x*11+offx,y*8+offy,8,7,15)
+      print(string.char(char),x*11+offx,y*8+offy,12)
+    end
+  end
+end
 
 function TIC()
   if btnp(00,60,6) and m<8 then m=m*2 draw() end
@@ -47,4 +69,5 @@ function TIC()
   if btnp(03,60,6) and r<48 then r=r+16 draw() end
   if btnp(02,60,6) and r>0 then r=r-16 draw() end 
   if keyp(63,60,6) then t=1-t draw() end
+  if keyp(49,60,6) then t=1-t font() end
 end
