@@ -20,3 +20,11 @@
 2022-03-31  Decca (Philipp)
 		* Version 2.1
 		* Fixed some bugs regarding the rle-encoding
+
+2023-11-21  Decca (Philipp)
+		* Version 2.2
+		* Replace the systemfont with own charset
+                * Unified decoder for pixels and palette
+                * Small facelift of the viewer
+                * Fixed a bug regarding config-mode
+                * Fixed a bug regarding insertion of decoder and viewer
