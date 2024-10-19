@@ -2,39 +2,17 @@
 #
 # TicMcTile - convert images to TIC-80 tiles or sprites
 #
-# Done:
-# - resolution of image no longer has to be dividble by 8
-# - different image sizes per color
-# - export as tiles (BG) or sprites (FG)
-# - optional page selection
-# - convert RGB to Palette if neccessary
-# - optional memory banks for the PRO version
-# - export as JavaScript (.js) - replace "-- " with "// "
-# - keep palette of original image
-# - inline code feature
-# - bonus: real compression
-# - fixed bug: when calculating start address for pages, the amount of colors was not respected
-# - fixed bug: error message for images too wide for pages greater 0 was improved
-# - fixed bug: replace 2nd if with elif in the rle-encoder
-# - fixed bug: append zero to rle enc-string to fix decoder-bug (flush last values)
-# - removed palette-decoder: the palette-data is now working with the same decoder as the pixeldata
-# - Charset-mode: eleminate the need for the big gaps between letters in the source image
-# - Charset-mode: show error when the image has more than 2 colors
-# - Charset-mode: when RLE is used, to many zeroes are stored at the end
-# - include viewer and decoder NON-Path relative
-# - write tests
-# - doc: how to load files / import code
-#
-# ToDo (Version 3):
-# - reduce languages to Lua and Javascript, the rest seems to be useless
-# - default output should be raw nowadays, not config
-# - lz-based compression
 
-# import modules
-from PIL import Image
+# import core modules
 import argparse
 import os.path
 import sys
+
+# import optional modules
+try:
+    from PIL import Image
+except ImportError:
+    raise SystemExit('ERROR: PIL is not installed, try: python -m pip install pillow')
 
 
 # replace argparse-error message with own, nicer help/usage
@@ -48,12 +26,12 @@ class ArgumentParser(argparse.ArgumentParser):
               "\n"
               "optional arguments:\n"
               "  -o, --output       outputfile for tile/sprite or charset values (e.g.: .lua)\n"
-              "  -l, --language     output as: js, fennel, wren, moon or squirrel, default is lua\n"
+              "  -l, --language     output as: js, default is lua\n"
               "  -f, --force        force overwrite of outputfile when it already exist\n"
               "  -s, --sprites      export as sprites instead of tiles\n"
               "  -c, --charset      export as charset to replace the systemfont\n"
               "  -p, --page         start page (1-3) for tiles/sprites, default is 0\n"
-              "  -m, --mode         mode to encode as: raw, rle, binary, default is config\n"
+              "  -m, --mode         mode to encode as: rle, config, binary, default is raw\n"
               "  -b, --bank         memory bank (1-7) for TIC-80 PRO version, default is 1\n"
               "  -k, --keep         keep colors of imagefile to adjust the TIC-80 palette\n"
               "  -v, --version      show version info\n"
@@ -61,13 +39,11 @@ class ArgumentParser(argparse.ArgumentParser):
               "\n"
               "The optional arguments are only needed if the default setting does not meet the\n"
               "required needs. A specific name for the output file (-o / --output) can be set.\n"
-              "The output can be in different scripting languages (-l / --language). Lua is\n"
-              "default, but the following languages are also supported: JavaScript, Squirrel,\n"
-              "Fennel, Wren and Moonscript. Dont expect too much, is just different formatting.\n"
+              "The language (-l / --language) for output can be Lua (default) or JavaScript.\n"
               "The data can be saved as sprites (-s / --sprites) instead of tiles.\n"
               "Tiles/sprites can start on a different page (-p / --page) instead of 0.\n"
-              "Mode (-m / --mode) to encode the tiles/sprites as part of the code as raw, rle,\n"
-              "as a binary-file (binary) or as part of the config, which is the default.\n"
+              "Mode (-m / --mode) to encode the tiles/sprites as part of the code as\n"
+              "raw (default), rle, as binary-file (binary) or as part of the config (config).\n"
               "Replace the systemfont with a correct formated charset (-c / --charset).\n"
               "To replace the smallfont choose (-p 1 / --page 1) instead of 0, which is default.\n"
               "In the PRO version of TIC-80 there are up to 8 memory banks (-b / --bank)\n"
@@ -103,7 +79,7 @@ parser.add_argument('-l', '--language',
                     metavar='language',
                     const='lua',
                     default='lua',
-                    choices=('js', 'fennel', 'wren', 'moon', 'squirrel', 'lua'),
+                    choices=('js', 'lua'),
                     type=str,
                     nargs='?',
                     action='store',
@@ -128,9 +104,9 @@ parser.add_argument('-c', '--charset',
                     help='export charset for systemfont')
 parser.add_argument('-m', '--mode',
                     metavar='mode',
-                    const='config',
-                    default='config',
-                    choices=('raw', 'rle', 'binary', 'config'),
+                    const='raw',
+                    default='raw',
+                    choices=('raw', 'rle', 'config', 'binary'),
                     type=str,
                     nargs='?',
                     action='store',
@@ -148,7 +124,7 @@ parser.add_argument('-k', '--keep',
                     help='keep original image colors')
 parser.add_argument('-v', '--version',
                     action='version',
-                    version='%(prog)s 2.2')
+                    version='%(prog)s 2.3')
 args = parser.parse_args()
 
 
@@ -345,31 +321,11 @@ if outputBank:
 
 
 # set language specialties
-if outputLang == "fennel":
-    outputExt = ".fnl"
-    outputCode = '(fn _G.TIC []\n (print (.. "' + outputMsg + '") 7 43)\n)'
-    outputCmnt = ";; "
-    outputVar = "let "
-elif outputLang == "wren":
-    outputExt = ".wren"
-    outputCode = 'class Game is TIC {\n construct new() { TIC.print("' + outputMsg + '",7,43) }\n}'
-    outputCmnt = "// "
-    outputVar = "var "
-elif outputLang == "squirrel":
-    outputExt = ".nut"
-    outputCode = 'function TIC() {\n print("' + outputMsg + '",7,43)\n}'
-    outputCmnt = "// "
-    outputVar = "local "
-elif outputLang == "js":
+if outputLang == "js":
     outputExt = ".js"
     outputCode = 'function TIC() {\n print("' + outputMsg + '",7,43)\n}'
     outputCmnt = "// "
     outputVar = "var "
-elif outputLang == "moon":
-    outputExt = ".moon"
-    outputCode = 'export TIC=-> print("' + outputMsg + '",7,43)'
-    outputCmnt = "-- "
-    outputVar = "local "
 else:
     outputExt = ".lua"
     outputCode = 'function TIC()\n print("' + outputMsg + '",7,43)\nend'

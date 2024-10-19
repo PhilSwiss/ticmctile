@@ -28,3 +28,10 @@
                 * Small facelift of the viewer
                 * Fixed a bug regarding config-mode
                 * Fixed a bug regarding insertion of decoder and viewer
+
+2024-10-19  Decca (Philipp)
+		* Version 2.3
+                * Detect if PIL is missing and show help with commands
+                * Reduced the languages to Lua and Javascript, the rest seems to be useless
+                * Default output mode is now raw, not config anymore
+                * Show also the palette in viewer

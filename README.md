@@ -8,7 +8,7 @@ Commandline tool to convert images to tiles, sprites or charsets for the [TIC-80
 When developing a [game](https://en.wikipedia.org/wiki/Video_game) or a [demo](https://en.wikipedia.org/wiki/Demoscene), sooner or later you will need to add some nice [graphics](https://en.wikipedia.org/wiki/Pixel_art).
 
 **TicMcTile** reads your imagefile(s) in a variety of [formats](https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html) and creates files from it, which can be run/loaded by the [TIC-80](https://tic80.com/) or your favorite [editor](https://en.wikipedia.org/wiki/Text_editor)/[ide](https://en.wikipedia.org/wiki/Integrated_development_environment).
-Supported languages are: [Lua](https://www.lua.org) & [Javascript](https://developer.mozilla.org/en-US/docs/Web/JavaScript) and basically also [Moonscript](https://moonscript.org), [Wren](https://wren.io), [Fennel](https://fennel-lang.org) and [Squirrel](http://www.squirrel-lang.org).
+Supported languages are: [Lua](https://www.lua.org) & [Javascript](https://developer.mozilla.org/en-US/docs/Web/JavaScript).
 
 Of course images can be loaded into the [sprite editor](https://github.com/nesbox/TIC-80/wiki#sprite-editor) by using the *import*-[command](https://github.com/nesbox/TIC-80/wiki/Console#available-commands).
 But **TicMcTile** can stuff more tiles/sprites into your program, allowing you to import images as 4 or 2 color images instead of 16, thanks to a feature called [BPP (Bits Per Pixel)](https://github.com/nesbox/TIC-80/wiki/Bits-Per-Pixel). It is also possible to replace the systemfont with an own charset of the right size. All this data can additionally be compressed by using [RLE (Run-length encoding)](https://en.wikipedia.org/wiki/Run-length_encoding).
@@ -33,7 +33,7 @@ But **TicMcTile** comes to the rescue. It will convert your images (no matter if
 You can convert a **singlepage**-image (128x128 or smaller) and assign it to one of the available pages, or you can use **multipage**-images. When using **4** colors, a **multipage** can be
 **max. 256 pixels** wide & 128 pixels high. In case of **2** colors, a **multipage** can be **max. 512 pixels** wide & 128 pixels high. You can select whether the image(s) should be converted to tiles (default) or sprites.
 
-Only images with **16 colors or less** are supported, for obvious reasons. These images should consist of [indexed colors](https://en.wikipedia.org/wiki/Indexed_color) or have a [color-palette](https://en.wikipedia.org/wiki/Palette_(computing)). Truecolor-images will be converted, but results may vary. Make sure, that images match the [color-palette](https://github.com/nesbox/TIC-80/wiki/palette) [(SWEETIE-16)](https://lospec.com/palette-list/sweetie-16) of the **TIC-80**. Or tell **TicMcTile** to keep (-k / --keep) the colors of your image by replacing the default ones.
+Only images with **16 colors or less** are supported, for obvious reasons. These images should consist of [indexed colors](https://en.wikipedia.org/wiki/Indexed_color) resp. have a [color-palette](https://en.wikipedia.org/wiki/Palette_(computing)). Truecolor-images will be converted, but results may vary. Make sure, that images match the [color-palette](https://github.com/nesbox/TIC-80/wiki/palette) [(SWEETIE-16)](https://lospec.com/palette-list/sweetie-16) of the **TIC-80**. Or tell **TicMcTile** to keep (-k / --keep) the colors of your image by replacing the default ones.
 
 ### Charsets
 
@@ -49,10 +49,8 @@ To replace the **big** chars of the [systemfont](https://github.com/nesbox/TIC-8
 Modes
 =====
 
-**TicMcTile** supports different modes to store the data of tiles/sprites, by default the *config*-mode is used.
-The file will include some pseudo-code and at the end, palette & sprites/tiles within **XML-style tags**. This mode is only supported in the [PRO](https://nesbox.itch.io/tic80)-version of [TIC-80](https://tic80.com/), as shown in the table below. Charsets are **not** supported when using this mode. To run a file with *config*-mode, simply use: `"tic80 myscript.lua"`
-
-When *raw*-mode is used, tiles/sprites or charsets and the palette will be saved into variables. To get this data written to memory at runtime, some extra **functions (decoders)** will be included to the file as well.
+**TicMcTile** supports different modes to store the data of tiles/sprites, by default the *raw*-mode is used.
+In this case, tiles/sprites or charsets and the palette will be saved into variables. To get this data written to memory at runtime, some extra **functions (decoders)** will be included to the file as well.
 In case of *rle*-mode, all data will be compressed using [RLE (Run-length encoding)](https://en.wikipedia.org/wiki/Run-length_encoding) to save some space, before stored to the variables.
 Note that you can have **multiple** sets of sprites/tiles or charsets and palettes when using these modes, because you can have several variables (eg. gfx1, gfx2 & pal1, pal2) to store and decode them.
 
@@ -60,13 +58,15 @@ As both modes write their data directly into the [RAM](https://github.com/nesbox
 To still be able to debug them, a simple **viewer** will also be included to the file. The sources of the **viewers** can be found in the *Viewers*-directory. The **decoders** are located in the *Decoders*-directory, accordingly. They also contain a brief **description** of the **dataformat** for the variables. To run files with *raw* or *rle*-mode, use: 
 `tic80 --skip --fs=. --cmd="import code myscript.lua & run"`
 
+When using the config-mode, the file will include some pseudo-code and at the end, palette & sprites/tiles within **XML-style tags**. This mode is only supported in the [PRO](https://nesbox.itch.io/tic80)-version of [TIC-80](https://tic80.com/), as shown in the table below. Charsets are **not** supported when using this mode. To run a file with *config*-mode, simply use: `"tic80 myscript.lua"`
+
 The binary mode is just an admission for a close friend and NOT directly usable for the TIC-80.
 
 | Mode | Description | TIC 80 | TIC 80 Pro |
 | --- | --- | :---: | :---: |
-| *config* | data saved as XML-style tagged config-block at end of sourc ecode | **_** | &check; |
 | *raw* | data saved as script-code and variable at beginning of source code | &check; | &check; |
 | *rle* | data saved as script-code and variable at beginning of source code | &check; | &check; |
+| *config* | data saved as XML-style tagged config-block at end of sourc ecode | **_** | &check; |
 | *binary* | data is saved in a standalone binary file for further usage | **-** | **-** |	
 
 
@@ -107,9 +107,9 @@ Specify a different name for the output file:
 
 Set a different scripting language for the output file:
 
-    $ ticmctile.py singlepage-2colors.png -l squirrel -o myownscript.nut
+    $ ticmctile.py singlepage-2colors.png -l js -o myownscript.js
 	
-	Mind the correct file extension: .js, .fnl, .wren, .moon .nut or .lua
+	Mind the correct file extension: .js or .lua
 
 Generate a sprite page instead of a tile page:
 
@@ -143,7 +143,7 @@ Encode the tiles or sprites as rle-compressed part of the code:
 
 Replace the systemfont with a custom charset:
 
-    $ ticmctile.py ionic7x6-charset.png -o freshchars.lua -m raw -c
+    $ ticmctile.py ionicV5-charset.png -o freshchars.lua -m raw -c
 
     This will replace the bigfont. To change the smallfont, set the page to 1 by adding "-p 1"
 
@@ -161,7 +161,7 @@ Commandline options
 
     optional arguments:
        -o, --output       outputfile for tile/sprite or charset values (e.g.: .lua)
-	   -l, --language     output as: js, fennel, wren, moon or squirrel, default is lua
+	   -l, --language     output as: js, default is lua
        -f, --force        force overwrite of outputfile when it already exist
        -s, --sprites      export as sprites instead of tiles
        -c, --charset      export as charset to replace the systemfont
@@ -174,13 +174,11 @@ Commandline options
 
     The optional arguments are only needed if the default setting does not meet the
     required needs. A specific name for the output file (-o / --output) can be set.
-    The output can be in different scripting languages (-l / --language). Lua is
-    default, but the following languages are also supported: JavaScript, Squirrel,
-    Fennel, Wren and Moonscript. Dont expect too much, is just different formatting.
+    The language (-l / --language) for output can be Lua (default) or JavaScript.
     The data can be saved as sprites (-s / --sprites) instead of tiles.
     Tiles/sprites can start on a different page (-p / --page) instead of 0.
-	Mode (-m / --mode) to encode the tiles/sprites as part of the code as raw, rle,
-    as a binary-file (binary) or as part of the config, which is the default.
+    Mode (-m / --mode) to encode the tiles/sprites as part of the code as
+    raw (default), rle, as binary-file (binary) or as part of the config (config).
     Replace the systemfont with a correct formated charset (-c / --charset).
     To replace the smallfont choose (-p 1 / --page 1) instead of 0, which is default.
     In the PRO version of TIC-80 there are up to 8 memory banks (-b / --bank)
@@ -219,10 +217,8 @@ Files
 Future ideas
 ============
 
-* Output of other languages than Lua, e.g. JavaScript - **Done**, implemented in version [1.1](https://github.com/PhilSwiss/ticmctile/tree/version1.1)
 * keeping the color-palette of the image, instead of using the default palette - **Done**, implemented in version [1.2](https://github.com/PhilSwiss/ticmctile/tree/version1.2)
 * Real compression of the values incl. a small decompressor for [Lua](https://www.lua.org/) - **Done**, implemented in version [2.0](https://github.com/PhilSwiss/ticmctile/tree/version2.0)
-* Decompressors/Viewers for languages other than Lua or JS &hearts; *Feel free*, to submit *your* contributions to this one &starf;
 
 
 Disclaimer
