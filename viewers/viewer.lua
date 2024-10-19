@@ -38,6 +38,10 @@ function draw()
   print("Up/Down\n switch\n color\n mode",4,62,10,false,1,true)
   print("Left/Right\n switch\n pages",4,92,10,false,1,true)
   print("TAB\n display\n system font",4,116,10,false,1,true)
+  for c = 0,15,1 do
+    rect(208,(c*8)+4,8,8,c)
+    print(c,218,(c*8)+6,15,false,1,true)
+  end
 end
 
 -- call the viewer
