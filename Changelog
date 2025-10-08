@@ -35,3 +35,10 @@
                 * Reduced the languages to Lua and Javascript, the rest seems to be useless
                 * Default output mode is now raw, not config anymore
                 * Show also the palette in viewer
+
+2025-06-01  Decca (Philipp)
+		* Version 2.4
+                * Width is now stored with 3 digits instead of 2
+                * Decoding of RLE is divided into 2 functions
+                * "tomem"-function can be called with a different target-address
+                * "-k / --keep"-option can truncate the length of the palette

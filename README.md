@@ -33,7 +33,7 @@ But **TicMcTile** comes to the rescue. It will convert your images (no matter if
 You can convert a **singlepage**-image (128x128 or smaller) and assign it to one of the available pages, or you can use **multipage**-images. When using **4** colors, a **multipage** can be
 **max. 256 pixels** wide & 128 pixels high. In case of **2** colors, a **multipage** can be **max. 512 pixels** wide & 128 pixels high. You can select whether the image(s) should be converted to tiles (default) or sprites.
 
-Only images with **16 colors or less** are supported, for obvious reasons. These images should consist of [indexed colors](https://en.wikipedia.org/wiki/Indexed_color) resp. have a [color-palette](https://en.wikipedia.org/wiki/Palette_(computing)). Truecolor-images will be converted, but results may vary. Make sure, that images match the [color-palette](https://github.com/nesbox/TIC-80/wiki/palette) [(SWEETIE-16)](https://lospec.com/palette-list/sweetie-16) of the **TIC-80**. Or tell **TicMcTile** to keep (-k / --keep) the colors of your image by replacing the default ones.
+Only images with **16 colors or less** are supported, for obvious reasons. These images should consist of [indexed colors](https://en.wikipedia.org/wiki/Indexed_color) resp. have a [color-palette](https://en.wikipedia.org/wiki/Palette_(computing)). Truecolor-images will be converted, but results may vary. Make sure, that images match the [color-palette](https://github.com/nesbox/TIC-80/wiki/palette) [(SWEETIE-16)](https://lospec.com/palette-list/sweetie-16) of the **TIC-80**. Or tell **TicMcTile** to keep (-k / --keep) the colors of your image by replacing the default ones. To keep only a limited amount of colors, add "-k 0" or "--keep 0" to only store the used colors of the image. When using a value between **1** or **16**, only the first **n** colors will be stored.
 
 ### Charsets
 
@@ -135,6 +135,12 @@ Keep the colors of the image file instead of using the default ones:
 
     16 colors will replace the whole palette, 4 or 2 colors will only replace the first palette entries.
 
+Keep only the neccessary colors of the image file instead of all:
+
+    $ ticmctile.py multipage-4colors.png -o limitpalette.lua -k 0
+
+    As the imagefile has just 4 colors, only the "first" 4 colors will be stored. Make sure the palette is organized this way before using.
+
 Encode the tiles or sprites as rle-compressed part of the code:
 
     $ ticmctile.py multipage-2colors.png -o smallerscript.lua -m rle
@@ -184,6 +190,7 @@ Commandline options
     In the PRO version of TIC-80 there are up to 8 memory banks (-b / --bank)
     to store the tiles/sprites, instead of only one. The colors of the image can
     be kept (-k / --keep), replacing the default colors (Sweetie-16) of the TIC-80.
+    Preserve fewers colors by using 0 (automatic) or 1 to 16 (manual).
 
     examples:
        ticmctile.py imagefile.png
@@ -196,6 +203,7 @@ Commandline options
        ticmctile.py dafont.png -o freshchars.lua -m raw -c
        ticmctile.py tilesgalore.gif -o membank3.lua -b 3
        ticmctile.py nicecolors.png -o mypalette.lua -k
+       ticmctile.py fewcolors.png -o shortpalette.lua -k 8
 
 
 Files
@@ -208,6 +216,8 @@ Files
 * **images/multipage-2colors.png** (3 pages with 2 colors, [originals](https://demozoo.org/graphics/3719/) [both](https://demozoo.org/graphics/115000/) by [Decca](https://demozoo.org/sceners/634/)/[Lego](https://www.pouet.net/groups.php?which=556)), font from [Chartist](https://github.com/PhilSwiss/chartist))
 * **images/multipage-4colors.png** (2 pages with 4 colors, [originals](https://demozoo.org/graphics/3719/) [both](https://demozoo.org/graphics/115000/) by [Decca](https://demozoo.org/sceners/634/)/[Lego](https://www.pouet.net/groups.php?which=556))
 * **images/ownpalette-16colors.png** (example image with an own palette, [original](https://demozoo.org/graphics/3719/) by [Decca](https://demozoo.org/sceners/634/)/[Lego](https://www.pouet.net/groups.php?which=556))
+* **images/ownpalette-12colors.png** (example image with only 12 colors, [original](https://demozoo.org/graphics/3719/) by [Decca](https://demozoo.org/sceners/634/)/[Lego](https://www.pouet.net/groups.php?which=556))
+
 * **images/ionicV5-charset.png** (example charset with 2 colors, [original](https://demozoo.org/productions/330035/) by [Decca](https://demozoo.org/sceners/634/)/[RiFT](https://www.pouet.net/groups.php?which=11428))
 * **decoders/decoder-raw.lua/.js** (the decoder when using raw-mode)
 * **decoders/decoder-rle.lua/.js** (the decoder when using rle-mode)

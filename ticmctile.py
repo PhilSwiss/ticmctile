@@ -49,6 +49,7 @@ class ArgumentParser(argparse.ArgumentParser):
               "In the PRO version of TIC-80 there are up to 8 memory banks (-b / --bank)\n"
               "to store the tiles/sprites, instead of only one. The colors of the image can\n"
               "be kept (-k / --keep), replacing the default colors (Sweetie-16) of the TIC-80.\n"
+              "Preserve fewers colors by using 0 (automatic) or 1 to 16 (manual).\n"
               "\n"
               "examples:\n"
               "  ticmctile.py imagefile.png \n"
@@ -60,7 +61,8 @@ class ArgumentParser(argparse.ArgumentParser):
               "  ticmctile.py flextiles.bmp -o thecodeinside.lua -m rle\n"
               "  ticmctile.py dafont.png -o freshchars.lua -m raw -c\n"
               "  ticmctile.py tilesgalore.gif -o membank3.lua -b 3\n"
-              "  ticmctile.py nicecolors.png -o mypalette.lua -k \n", file=sys.stderr)
+              "  ticmctile.py nicecolors.png -o mypalette.lua -k \n"
+              "  ticmctile.py fewcolors.png -o shortpalette.lua -k 8 \n", file=sys.stderr)
         self.exit(1, '%s: ERROR: %s\n' % (self.prog, message))
 
 
@@ -120,11 +122,17 @@ parser.add_argument('-b', '--bank',
                     action='store',
                     help='memory bank (1-7) for TIC-80 PRO version, default is 1')
 parser.add_argument('-k', '--keep',
-                    action='store_true',
+                    metavar='keep',
+                    const=True,
+                    default=False,
+                    choices=range(0, 17),
+                    type=int,
+                    nargs='?',
+                    action='store',
                     help='keep original image colors')
 parser.add_argument('-v', '--version',
                     action='version',
-                    version='%(prog)s 2.3')
+                    version='%(prog)s 2.4')
 args = parser.parse_args()
 
 
@@ -213,8 +221,9 @@ else:
 
 # set palette for output file
 stdPalette = "1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57"  # SWEETIE-16 palette
-if not outputKeep:
+if outputKeep is False:
     Palette = stdPalette
+    print("     Palette: 16 (default)")
 else:
     srcPalette = srcImg.getpalette()  # get original palette from image
     rgbEntries = (2 ** digits) * 3
@@ -223,9 +232,21 @@ else:
     for entry in rgbPalette:
         hexVal = '%0*x' % (2, entry)
         Palette = Palette + hexVal
-    Palette = Palette + stdPalette[len(Palette):]  # fill up with default palette
+
+    Palette = Palette + stdPalette[len(Palette):]  # fill up remaining colors with default palette
+
+    if not isinstance(outputKeep, bool):
+        if outputKeep == 0:
+            Palette = Palette[:(len(orgColors) * 2) * 3]  # only store used colors
+        else:
+            Palette = Palette[:(outputKeep * 2) * 3]  # only store manual amount of colors
+
+    print("     Palette: " + str(len(Palette) // 6) + " (image)")
+
+PaletteLen = '%0*x' % (3, len(Palette))  # store length of palette in hex
+
 if outputEnc == "raw" or outputEnc == "rle":
-    # swap values (low & high nibble) for the unified decoder
+    # swap values (low & high nibble) for the decoders
     Palette = ''.join([Palette[val:val + 2][::-1] for val in range(0, len(Palette), 2)])  # (https://stackoverflow.com/a/4606057)
 
 
@@ -300,7 +321,7 @@ if outputEnc != "config":
     else:
         offsetAdr = "0c"  # Offset for sprites
     offsetAdr = offsetAdr + str(outputPage * digits) + "00"  # Offset for page
-    hexWidth = '%0*x' % (2, rowValues // 8)  # Width aka Values per row
+    hexWidth = '%0*x' % (3, rowValues)  # Width aka Values per row
 
 
 # reformat tile values if systemfont is replaced
@@ -311,7 +332,7 @@ if outputCharset:
         offsetAdr = "28E08"  # Offset for systemfont
     else:
         offsetAdr = "29608"  # Offset for smallfont
-    hexWidth = '%0*x' % (2, len(serialTiles) // 8)  # Width aka Length of the Valuestring
+    hexWidth = '%0*x' % (3, len(serialTiles))  # Width aka Length of the Valuestring
 
 
 # set memory bank if set
@@ -442,7 +463,7 @@ def write_config():
 
 # write data as RAW (unencoded) to output file
 def write_raw():
-    outputPalette = '\n' + outputVar + 'pal = "' + "07F80" + "0c" + Palette + '"\n'  # Offset and width for palette
+    outputPalette = '\n' + outputVar + 'pal = "' + "07F80" + PaletteLen + Palette + '"\n'  # Offset and width for palette
     outputCode = '\n' + outputVar + 'gfx = "'
     outputCode = outputCode + offsetAdr
     outputCode = outputCode + str(hexWidth)
@@ -465,7 +486,7 @@ def write_raw():
 # write data as RLE-encoded to output file
 def write_rle():
     encPalette = encode_rle(Palette)
-    outputPalette = '\n' + outputVar + 'pal = "' + "07F80" + "0c" + encPalette + '"\n'  # Offset and width for palette
+    outputPalette = '\n' + outputVar + 'pal = "' + "07F80" + PaletteLen + encPalette + '"\n'  # Offset and width for palette
     outputCode = '\n' + outputVar + 'gfx = "'
     outputCode = outputCode + offsetAdr
     outputCode = outputCode + str(hexWidth)
